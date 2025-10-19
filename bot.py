@@ -11,7 +11,7 @@ print("🟢 DEBUG: Starting imports...")
 
 # Безопасный импорт модулей
 try:
-    import ton_manager
+    from ton_manager import ton_manager  # если у вас синглтон
     print("✅ DEBUG: ton_manager imported")
     from config import BOT_TOKEN, ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE, TON_NETWORK
     print("✅ DEBUG: config imported")
@@ -24,7 +24,6 @@ except ImportError as e:
     MAX_NFT_PRICE = 10.0
     TON_NETWORK = 'testnet'
     TON_AVAILABLE = False
-
 try:
     from database import DatabaseManager
     print("✅ DEBUG: DatabaseManager imported")
@@ -268,13 +267,15 @@ if __name__ == "__main__":
     logger.info(f"🗃️ База данных доступна: {DB_AVAILABLE}")
 
     # Инициализация TON провайдера (если доступен)
-    if TON_AVAILABLE:
-        try:
-            asyncio.run(ton_manager.init_provider())
-            logger.info("✅ TON провайдер инициализирован")
-        except Exception as e:
-            logger.error(f"❌ Ошибка инициализации TON: {e}")
-            TON_AVAILABLE = False
+if TON_AVAILABLE:
+    try:
+        # Создаем экземпляр класса
+        ton_instance = ton_manager.TONManager()
+        asyncio.run(ton_instance.init_provider())
+        logger.info("✅ TON провайдер инициализирован")
+    except Exception as e:
+        logger.error(f"❌ Ошибка инициализации TON: {e}")
+        TON_AVAILABLE = False
 
     # Бесконечный цикл с перезапуском при ошибках для Render
     while True:
@@ -295,5 +296,6 @@ if __name__ == "__main__":
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 
 

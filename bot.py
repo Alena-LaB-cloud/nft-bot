@@ -7,7 +7,6 @@ import random
 from datetime import datetime
 
 from telebot import TeleBot, types
-from flask import Flask
 
 print("🟢 DEBUG: Starting bot imports...")
 
@@ -23,15 +22,6 @@ except ImportError as e:
     MAX_NFT_PRICE = 10.0
     TON_NETWORK = 'testnet'
 
-# ========== TON МЕНЕДЖЕР ==========
-try:
-    import ton_manager
-    TON_AVAILABLE = True
-    print("✅ DEBUG: ton_manager imported")
-except ImportError as e:
-    print(f"❌ DEBUG: ton_manager import failed: {e}")
-    TON_AVAILABLE = False
-
 # ========== БАЗА ДАННЫХ ==========
 try:
     from database import DatabaseManager
@@ -46,44 +36,13 @@ except Exception as e:
     DB_AVAILABLE = False
 
 # ========== СИМУЛЯТОР ТРАНЗАКЦИЙ ==========
-try:
-    from transaction_simulator import tx_simulator
-    TX_SIMULATOR_AVAILABLE = True
-    print("✅ DEBUG: Transaction simulator imported")
-except ImportError as e:
-    print(f"❌ DEBUG: Transaction simulator import failed: {e}")
-    TX_SIMULATOR_AVAILABLE = False
+TX_SIMULATOR_AVAILABLE = False  # Временно отключим
 
 print("🟢 DEBUG: All imports completed")
 
 # ========== ИНИЦИАЛИЗАЦИЯ БОТА ==========
 bot = TeleBot(BOT_TOKEN)
 print("✅ DEBUG: Bot initialized")
-
-# ========== ВЕБ-СЕРВЕР ==========
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "🤖 NFT Bot is running!"
-
-@app.route('/health')
-def health():
-    return "✅ Bot is healthy"
-
-@app.route('/ping')
-def ping():
-    return "pong"
-
-def run_web_server():
-    port = int(os.environ.get('PORT', 10000))
-    logging.getLogger('werkzeug').setLevel(logging.ERROR)
-    os.environ['WERKZEUG_RUN_MAIN'] = 'true'
-    app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=False, debug=False)
-
-web_thread = threading.Thread(target=run_web_server, daemon=True)
-web_thread.start()
-print("✅ DEBUG: Web server started")
 
 # ========== НАСТРОЙКА ЛОГИРОВАНИЯ ==========
 logging.basicConfig(
@@ -103,7 +62,6 @@ waiting_for_gift = {}
 user_nfts = {}
 
 print("🟢 DEBUG: Bot initialization complete!")
-print(f"🔧 DEBUG: TON_AVAILABLE = {TON_AVAILABLE}")
 print(f"🔧 DEBUG: DB_AVAILABLE = {DB_AVAILABLE}")
 print(f"🔧 DEBUG: TX_SIMULATOR_AVAILABLE = {TX_SIMULATOR_AVAILABLE}")
 
@@ -127,7 +85,6 @@ def start_command(message):
 /nft - Создать NFT
 /my_nfts - Мои NFT
 /market - Маркетплейс
-/transactions - Мои транзакции
 
 🚀 Версия: 2.0 (NFT Marketplace)
     """
@@ -142,10 +99,29 @@ def start_command(message):
     btn7 = types.KeyboardButton('💰 Продать NFT')
     btn8 = types.KeyboardButton('🎁 Подарить NFT')
     btn9 = types.KeyboardButton('🏪 Маркетплейс')
-    btn10 = types.KeyboardButton('📊 Мои транзакции')
-    markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10)
+    markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
 
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
     logger.info(f"👤 Пользователь {user.id} запустил бота")
 
-# ... остальной код без изменений ...
+# ... остальной код команд (оставьте без изменений) ...
+
+if __name__ == "__main__":
+    logger.info("🤖 Запуск NFT бота с маркетплейсом...")
+    logger.info(f"🗃️ База данных доступна: {DB_AVAILABLE}")
+
+    while True:
+        try:
+            logger.info("🔄 Запуск polling бота...")
+            bot.infinity_polling(
+                skip_pending=True,
+                timeout=30,
+                long_polling_timeout=30
+            )
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"❌ Ошибка при работе бота: {error_msg}")
+            logger.info("🔄 Перезапуск через 15 секунд...")
+            time.sleep(15)
+
+

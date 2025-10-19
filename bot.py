@@ -161,3 +161,4 @@ if __name__ == "__main__":
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+

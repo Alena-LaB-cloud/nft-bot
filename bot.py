@@ -109,7 +109,8 @@ def start_command(message):
     btn7 = types.KeyboardButton('💰 Продать NFT')
     btn8 = types.KeyboardButton('🎁 Подарить NFT')
     btn9 = types.KeyboardButton('🏪 Маркетплейс')
-    markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
+    btn10 = types.KeyboardButton('📊 Мои транзакции')
+    markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10)
 
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
     logger.info(f"👤 Пользователь {user.id} запустил бота")
@@ -479,6 +480,31 @@ def handle_sale_selection(message):
         bot.send_message(message.chat.id, "❌ Введите число")
         waiting_for_sale[message.chat.id] = False
 
+@bot.message_handler(commands=['transactions'])
+def transactions_command(message):
+    """Мои транзакции"""
+    user_id = message.from_user.id
+    
+    if not TX_SIMULATOR_AVAILABLE:
+        bot.send_message(message.chat.id, "❌ Симулятор транзакций недоступен")
+        return
+    
+    user_transactions = tx_simulator.get_user_transactions(user_id)
+    
+    if not user_transactions:
+        transactions_text = "📊 У вас пока нет транзакций"
+    else:
+        transactions_text = "📊 **Ваши транзакции:**\n\n"
+        for tx in user_transactions:
+            transactions_text += f"🔗 **{tx['tx_hash']}**\n"
+            transactions_text += f"   📝 Тип: {tx['type']}\n"
+            transactions_text += f"   💰 Сумма: {tx['amount']} TON\n"
+            transactions_text += f"   📅 Время: {tx['timestamp']}\n"
+            transactions_text += f"   ⛓️ Блок: {tx['block']}\n"
+            transactions_text += f"   💸 Комиссия: {tx['fee']} TON\n\n"
+    
+    bot.send_message(message.chat.id, transactions_text, parse_mode='Markdown')
+
 # Обработка цены для продажи
 @bot.message_handler(func=lambda message: waiting_for_sale.get(message.chat.id) and isinstance(waiting_for_sale[message.chat.id], str))
 def handle_sale_price(message):
@@ -709,6 +735,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

@@ -13,8 +13,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ... остальной код без изменений
-
 # Веб-сервер для Render
 app = Flask(__name__)
 
@@ -96,14 +94,8 @@ def debug_command(message):
 🌐 Хостинг: Render
 🔑 Токен: {'✅ Установлен' if BOT_TOKEN else '❌ Отсутствует'}
 📊 Логи: Включены
-
-💡 Следующие шаги:
-1. Проверить подключение к TON
-2. Добавить базу данных
-3. Включить NFT функционал
     """
     bot.send_message(message.chat.id, debug_text)
-    logger.info(f"🔧 Отладочная информация запрошена пользователем {message.from_user.id}")
 
 
 @bot.message_handler(func=lambda message: message.text == '🟢 Статус')
@@ -126,7 +118,6 @@ def echo_message(message):
 
 if __name__ == "__main__":
     logger.info("🚀 Запуск NFT бота на Render...")
-    logger.info(f"🔑 Токен бота: {'✅' if BOT_TOKEN else '❌'}")
 
     try:
         bot.infinity_polling()

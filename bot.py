@@ -447,6 +447,26 @@ def handle_sale_price(message):
         if MIN_NFT_PRICE <= price <= MAX_NFT_PRICE:
             nft_id = waiting_for_sale[message.chat.id]
             user_id = message.from_user.id
+
+            # В функции handle_sale_price после установки цены добавьте:
+if TX_SIMULATOR_AVAILABLE:
+    transaction = tx_simulator.simulate_sale(
+        nft_id=nft_id,
+        seller_id=user_id,
+        buyer_id=None,  # пока нет покупателя
+        price=price
+    )
+    
+    success_text = f"""
+✅ NFT выставлен на продажу!
+
+🖼️ {nft['name']}
+💰 Цена: {price} TON
+📊 Статус: В продаже
+🔗 Транзакция: {transaction['tx_hash']}
+
+Теперь ваш NFT виден в маркетплейсе!
+"""
             
             # Находим NFT и устанавливаем цену
             for nft in user_nfts.get(user_id, []):
@@ -648,6 +668,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

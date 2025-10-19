@@ -5,7 +5,7 @@ load_dotenv()
 
 # Настройки бота
 BOT_TOKEN = os.getenv('8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
-ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_IDS', '1222144963').split(',')]
+ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_IDS', '788630583').split(',')]
 
 # Настройки TON
 TON_NETWORK = os.getenv('TON_NETWORK')

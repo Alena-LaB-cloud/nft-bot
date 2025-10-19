@@ -9,13 +9,6 @@ from datetime import datetime
 from telebot import TeleBot, types
 from flask import Flask
 
-try:
-    from transaction_simulator import tx_simulator
-    TX_SIMULATOR_AVAILABLE = True
-except ImportError as e:
-    print(f"⚠️ Transaction simulator unavailable: {e}")
-    TX_SIMULATOR_AVAILABLE = False
-    
 # Безопасный импорт модулей
 try:
     import ton_manager
@@ -38,6 +31,13 @@ except ImportError as e:
     print(f"⚠️ Database модуль недоступен: {e}")
     DB_AVAILABLE = False
 
+try:
+    from transaction_simulator import tx_simulator
+    TX_SIMULATOR_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Transaction simulator unavailable: {e}")
+    TX_SIMULATOR_AVAILABLE = False
+
 # Инициализация бота
 bot = TeleBot(BOT_TOKEN)
 
@@ -54,7 +54,11 @@ def health():
 
 def run_web_server():
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=False)
+    # Отключаем логирование Werkzeug и предупреждения
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+    os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+    
+    app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=False, debug=False)
 
 web_thread = threading.Thread(target=run_web_server, daemon=True)
 web_thread.start()
@@ -743,6 +747,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

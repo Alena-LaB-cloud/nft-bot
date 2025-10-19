@@ -258,6 +258,25 @@ def gift_command(message):
     waiting_for_gift[message.chat.id] = True
     bot.send_message(message.chat.id, gift_text)
 
+# В функции handle_gift_recipient после передачи NFT добавьте:
+if TX_SIMULATOR_AVAILABLE:
+    transaction = tx_simulator.simulate_gift(
+        nft_id=nft_id,
+        from_user=user_id,
+        to_user=recipient_id
+    )
+    
+    success_text = f"""
+🎁 NFT успешно подарен!
+
+🖼️ {gifted_nft['name']}
+👤 Получатель: ID {recipient_id}
+🔗 Транзакция: {transaction['tx_hash']}
+💫 Подарок отправлен!
+
+Теперь этот NFT принадлежит другому пользователю.
+"""
+
 @bot.message_handler(commands=['help'])
 def help_command(message):
     """Команда помощи"""
@@ -668,6 +687,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

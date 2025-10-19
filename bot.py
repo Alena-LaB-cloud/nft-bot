@@ -7,8 +7,31 @@ import threading
 from telebot import TeleBot, types
 from flask import Flask
 
-import ton_manager
-from config import ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE
+# Безопасный импорт модулей
+try:
+    import ton_manager
+    from config import BOT_TOKEN, ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE, TON_NETWORK
+    TON_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Config модули недоступны: {e}")
+    # Значения по умолчанию
+    BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
+    ADMIN_IDS = [788630583]  # ваш ID из config.py
+    MIN_NFT_PRICE = 0.1
+    MAX_NFT_PRICE = 10.0
+    TON_NETWORK = 'testnet'
+    TON_AVAILABLE = False
+
+try:
+    from database import DatabaseManager
+    db = DatabaseManager()
+    DB_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Database модуль недоступен: {e}")
+    DB_AVAILABLE = False
+
+# Инициализация бота (ПОСЛЕ импортов config) - В КАВЫЧКАХ!
+bot = TeleBot(BOT_TOKEN)
 
 # Веб-сервер для Render
 app = Flask(__name__)
@@ -21,15 +44,11 @@ def home():
 def health():
     return "✅ Bot is healthy"
 
-@app.route('/ping')
-def ping():
-    return "pong"
-
 def run_web_server():
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=False)
 
-# Запуск веб-сервера в отдельном потоке
+# Запуск в отдельном потоке
 web_thread = threading.Thread(target=run_web_server, daemon=True)
 web_thread.start()
 
@@ -40,7 +59,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Инициализация бота
 # Инициализация бота (ПОСЛЕ импортов config)
 bot = TeleBot("8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc")
 
@@ -169,6 +187,7 @@ except ImportError as e:
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 
 
 

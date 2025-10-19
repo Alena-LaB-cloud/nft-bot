@@ -245,6 +245,12 @@ def market_command(message):
     """
     bot.send_message(message.chat.id, market_text, parse_mode='Markdown')
 
+@bot.message_handler(func=lambda message: message.text == '📊 Мои транзакции')
+def transactions_button(message):
+    """Кнопка транзакций"""
+    transactions_command(message)
+
+
 @bot.message_handler(commands=['sell'])
 def sell_command(message):
     """Продажа NFT"""
@@ -316,12 +322,14 @@ def help_command(message):
 /sell - Продать NFT
 /gift - Подарить NFT
 /market - Маркетплейс
+/transactions - Мои транзакции
 
 🎨 NFT функционал:
 • Создание NFT из медиа
 • Продажа NFT за TON
 • Подарки NFT друзьям
 • Просмотр коллекции
+• История транзакций
     """
     bot.send_message(message.chat.id, help_text)
 
@@ -735,6 +743,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

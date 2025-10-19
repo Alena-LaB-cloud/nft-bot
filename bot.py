@@ -2,27 +2,85 @@ import os
 import logging
 import time
 import random
+import sqlite3
 from datetime import datetime
 from telebot import TeleBot, types
 
-# Импорты модулей
-from config import BOT_TOKEN, MIN_NFT_PRICE, MAX_NFT_PRICE
-from database import db
-from transaction_manager import tx_manager
-
 print("🟢 Starting NFT Bot...")
 
-# Инициализация бота
+# === КОНФИГУРАЦИЯ ===
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
+MIN_NFT_PRICE = 0.1
+MAX_NFT_PRICE = 100.0
+
+# === БАЗА ДАННЫХ В ПАМЯТИ ===
+class DatabaseManager:
+    def __init__(self):
+        self.user_wallets = {}
+        print("✅ Database initialized")
+
+    def save_wallet_address(self, user_id: int, username: str, wallet_address: str) -> bool:
+        try:
+            self.user_wallets[user_id] = {
+                'username': username,
+                'wallet_address': wallet_address,
+                'created_at': datetime.now().strftime("%d.%m.%Y %H:%M")
+            }
+            print(f"✅ Wallet saved for user {user_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Error saving wallet: {e}")
+            return False
+
+    def get_wallet_address(self, user_id: int):
+        user_data = self.user_wallets.get(user_id)
+        return user_data['wallet_address'] if user_data else None
+
+# === МЕНЕДЖЕР ТРАНЗАКЦИЙ ===
+class TransactionManager:
+    def __init__(self):
+        self.transactions = {}
+        print("✅ Transaction manager initialized")
+    
+    def create_transaction(self, tx_type: str, nft_id: str, from_user: int, to_user: int = None, amount: float = 0):
+        tx_hash = f"{tx_type}_{int(time.time())}_{random.randint(1000, 9999)}"
+        
+        transaction = {
+            'tx_hash': tx_hash,
+            'type': tx_type,
+            'nft_id': nft_id,
+            'from_user': from_user,
+            'to_user': to_user,
+            'amount': amount,
+            'status': 'completed',
+            'timestamp': datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+            'block': random.randint(1000000, 9999999),
+            'fee': round(amount * 0.05, 4) if amount > 0 else 0.01
+        }
+        
+        self.transactions[tx_hash] = transaction
+        return transaction
+    
+    def get_user_transactions(self, user_id: int):
+        user_txs = []
+        for tx in self.transactions.values():
+            if tx['from_user'] == user_id or tx['to_user'] == user_id:
+                user_txs.append(tx)
+        return user_txs
+
+# === ИНИЦИАЛИЗАЦИЯ ===
 bot = TeleBot(BOT_TOKEN)
+db = DatabaseManager()
+tx_manager = TransactionManager()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Глобальные хранилища
+# === ГЛОБАЛЬНЫЕ ХРАНИЛИЩА ===
 user_nfts = {}
 nft_marketplace = []
 user_states = {}
 
-print("✅ Bot initialized successfully!")
+print("✅ All systems initialized!")
 
 # === КЛАВИАТУРА ===
 def get_main_keyboard():
@@ -37,7 +95,7 @@ def get_main_keyboard():
     markup.add(*[types.KeyboardButton(btn) for btn in buttons])
     return markup
 
-# === КОМАНДЫ ===
+# === КОМАНДЫ БОТА ===
 @bot.message_handler(commands=['start'])
 def start_command(message):
     user = message.from_user
@@ -57,7 +115,7 @@ def start_command(message):
 
 ✅ <b>Все системы работают стабильно!</b>
 
-🚀 <b>Версия: 5.0 (Production Ready)</b>
+🚀 <b>Версия: 6.0 (All-in-One)</b>
     """
     
     bot.send_message(
@@ -164,7 +222,7 @@ def sell_command(message):
     
     # Создаем список NFT для выбора
     markup = types.InlineKeyboardMarkup()
-    for i, nft in enumerate(user_nfts[user_id][:5], 1):  # Максимум 5 NFT
+    for i, nft in enumerate(user_nfts[user_id][:5], 1):
         if not nft.get('for_sale', False):
             markup.add(types.InlineKeyboardButton(
                 f"💰 {nft['name']}", 
@@ -216,7 +274,7 @@ def market_command(message):
     else:
         market_text = f"🏪 <b>NFT Маркетплейс</b> ({len(nft_marketplace)} NFT)\n\n"
         
-        for i, nft in enumerate(nft_marketplace[:10], 1):  # Показываем первые 10
+        for i, nft in enumerate(nft_marketplace[:10], 1):
             market_text += f"<b>{i}. {nft['name']}</b>\n"
             market_text += f"   💰 <b>{nft['price']} TON</b>\n"
             market_text += f"   👤 {nft['owner_name']}\n"
@@ -240,7 +298,7 @@ def transactions_command(message):
     else:
         tx_text = f"📊 <b>Ваши транзакции</b> ({len(transactions)})\n\n"
         
-        for tx in transactions[-10:]:  # Последние 10 транзакций
+        for tx in transactions[-10:]:
             emoji = "🔄" if tx['type'] == 'mint' else "💰" if tx['type'] == 'sale' else "🎁"
             tx_text += f"{emoji} <b>{tx['type'].upper()}</b>\n"
             tx_text += f"   🔗 <code>{tx['tx_hash']}</code>\n"
@@ -250,7 +308,7 @@ def transactions_command(message):
     
     bot.send_message(message.chat.id, tx_text, parse_mode='HTML')
 
-# === ОБРАБОТЧИКИ СООБЩЕНИЙ ===
+# === ОБРАБОТЧИКИ МЕДИА ===
 @bot.message_handler(content_types=['photo', 'video', 'document'])
 def handle_media(message):
     if user_states.get(message.chat.id) == 'waiting_nft':
@@ -312,6 +370,7 @@ def handle_media(message):
             reply_markup=markup
         )
 
+# === ОБРАБОТЧИК СООБЩЕНИЙ ===
 @bot.message_handler(func=lambda message: True)
 def handle_all_messages(message):
     user_id = message.from_user.id

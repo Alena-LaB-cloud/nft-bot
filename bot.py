@@ -1,11 +1,10 @@
 import asyncio
 import os
 import logging
+import time
+import threading
 
-import mport
 from telebot import TeleBot, types
-
-import os
 from flask import Flask
 
 import ton_manager
@@ -18,12 +17,19 @@ app = Flask(__name__)
 def home():
     return "🤖 NFT Bot is running!"
 
+@app.route('/health')
+def health():
+    return "✅ Bot is healthy"
+
+@app.route('/ping')
+def ping():
+    return "pong"
+
 def run_web_server():
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, threaded=True)
+    app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=False)
 
-# Запуск в отдельном потоке
-import threading
+# Запуск веб-сервера в отдельном потоке
 web_thread = threading.Thread(target=run_web_server, daemon=True)
 web_thread.start()
 
@@ -38,8 +44,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
 bot = TeleBot(BOT_TOKEN)
 
-
-# Команды бота
+# Команды бота (остаются без изменений)
 @bot.message_handler(commands=['start'])
 def start_command(message):
     """Команда /start"""
@@ -69,7 +74,6 @@ def start_command(message):
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
     logger.info(f"👤 Пользователь {user.id} запустил бота")
 
-
 @bot.message_handler(commands=['help'])
 def help_command(message):
     """Команда помощи"""
@@ -85,7 +89,6 @@ def help_command(message):
 🎨 NFT функционал в разработке
     """
     bot.send_message(message.chat.id, help_text)
-
 
 @bot.message_handler(commands=['debug'])
 def debug_command(message):
@@ -106,18 +109,15 @@ def debug_command(message):
     bot.send_message(message.chat.id, debug_text)
     logger.info(f"🔧 Отладочная информация запрошена пользователем {message.from_user.id}")
 
-
 @bot.message_handler(func=lambda message: message.text == '🟢 Статус')
 def status_button(message):
     """Кнопка статуса"""
     bot.send_message(message.chat.id, "✅ Бот работает стабильно!\nХостинг: Render\nСтатус: Online")
 
-
 @bot.message_handler(func=lambda message: message.text == 'ℹ️ Помощь')
 def help_button(message):
     """Кнопка помощи"""
     help_command(message)
-
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
@@ -125,33 +125,39 @@ def echo_message(message):
     bot.reply_to(message, f"🔍 Получено сообщение: {message.text}")
 
 if __name__ == "__main__":
-        import time
+    logger.info("🤖 Запуск NFT бота для TON...")
+    logger.info(f"👑 Администраторы: {ADMIN_IDS}")
+    logger.info(f"💎 Сеть TON: {ton_manager.network}")
+    logger.info(f"💰 Диапазон цен: {MIN_NFT_PRICE}-{MAX_NFT_PRICE} TON")
 
-        logger.info("🤖 Запуск NFT бота для TON...")
-        logger.info(f"👑 Администраторы: {ADMIN_IDS}")
-        logger.info(f"💎 Сеть TON: {ton_manager.network}")
-        logger.info(f"💰 Диапазон цен: {MIN_NFT_PRICE}-{MAX_NFT_PRICE} TON")
+    # Даем время запуститься веб-серверу
+    time.sleep(3)
+    logger.info("🌐 Веб-сервер запущен в отдельном потоке")
 
-        # Инициализация TON провайдера
+    # Инициализация TON провайдера
+    try:
         asyncio.run(ton_manager.init_provider())
+        logger.info("✅ TON провайдер инициализирован")
+    except Exception as e:
+        logger.error(f"❌ Ошибка инициализации TON: {e}")
 
-        # Бесконечный цикл с перезапуском при ошибках для Render
-        while True:
-            try:
-                logger.info("🔄 Запуск polling бота...")
-                bot.infinity_polling(
-                    skip_pending=True,  # Пропустить pending updates
-                    timeout=30,
-                    long_polling_timeout=30
-                )
-            except Exception as e:
-                error_msg = str(e)
-                logger.error(f"❌ Ошибка при работе бота: {error_msg}")
+    # Бесконечный цикл с перезапуском при ошибках для Render
+    while True:
+        try:
+            logger.info("🔄 Запуск polling бота...")
+            bot.infinity_polling(
+                skip_pending=True,
+                timeout=30,
+                long_polling_timeout=30
+            )
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"❌ Ошибка при работе бота: {error_msg}")
 
-                # Если ошибка 409 (конфликт экземпляров), ждем дольше
-                if "409" in error_msg:
-                    logger.info("🕒 Обнаружен конфликт экземпляров, ждем 60 секунд...")
-                    time.sleep(60)
-                else:
-                    logger.info("🔄 Перезапуск через 15 секунд...")
-                    time.sleep(15)
+            # Если ошибка 409 (конфликт экземпляров), ждем дольше
+            if "409" in error_msg:
+                logger.info("🕒 Обнаружен конфликт экземпляров, ждем 60 секунд...")
+                time.sleep(60)
+            else:
+                logger.info("🔄 Перезапуск через 15 секунд...")
+                time.sleep(15)

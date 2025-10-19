@@ -135,11 +135,19 @@ if __name__ == "__main__":
     logger.info("🌐 Веб-сервер запущен в отдельном потоке")
 
     # Инициализация TON провайдера
-    try:
-        asyncio.run(ton_manager.init_provider())
-        logger.info("✅ TON провайдер инициализирован")
-    except Exception as e:
-        logger.error(f"❌ Ошибка инициализации TON: {e}")
+   try:
+    import ton_manager
+    from config import BOT_TOKEN, ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE, TON_NETWORK
+    TON_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Config модули недоступны: {e}")
+    # Значения по умолчанию
+    BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
+    ADMIN_IDS = [788630583]  # ваш ID из config.py
+    MIN_NFT_PRICE = 0.1
+    MAX_NFT_PRICE = 10.0
+    TON_NETWORK = 'testnet'
+    TON_AVAILABLE = False
 
     # Бесконечный цикл с перезапуском при ошибках для Render
     while True:
@@ -161,4 +169,5 @@ if __name__ == "__main__":
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 

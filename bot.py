@@ -1,10 +1,31 @@
-import os
 import asyncio
+import os
 import logging
-import time
-import threading
+
+import mport
 from telebot import TeleBot, types
+
+import os
 from flask import Flask
+
+import ton_manager
+from config import ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE
+
+# Веб-сервер для Render
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 NFT Bot is running!"
+
+def run_web_server():
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, threaded=True)
+
+# Запуск в отдельном потоке
+import threading
+web_thread = threading.Thread(target=run_web_server, daemon=True)
+web_thread.start()
 
 # Настройка логирования
 logging.basicConfig(
@@ -12,24 +33,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Веб-сервер для Render
-app = Flask(__name__)
-
-
-@app.route('/')
-def home():
-    return "🤖 NFT Bot is running!"
-
-
-def run_web_server():
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, threaded=True)
-
-
-# Запуск веб-сервера в отдельном потоке
-web_thread = threading.Thread(target=run_web_server, daemon=True)
-web_thread.start()
 
 # Инициализация бота
 BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
@@ -94,8 +97,14 @@ def debug_command(message):
 🌐 Хостинг: Render
 🔑 Токен: {'✅ Установлен' if BOT_TOKEN else '❌ Отсутствует'}
 📊 Логи: Включены
+
+💡 Следующие шаги:
+1. Проверить подключение к TON
+2. Добавить базу данных
+3. Включить NFT функционал
     """
     bot.send_message(message.chat.id, debug_text)
+    logger.info(f"🔧 Отладочная информация запрошена пользователем {message.from_user.id}")
 
 
 @bot.message_handler(func=lambda message: message.text == '🟢 Статус')
@@ -115,12 +124,34 @@ def echo_message(message):
     """Эхо-ответ для тестирования"""
     bot.reply_to(message, f"🔍 Получено сообщение: {message.text}")
 
-
 if __name__ == "__main__":
-    logger.info("🚀 Запуск NFT бота на Render...")
+        import time
 
-    try:
-        bot.infinity_polling()
-        logger.info("🤖 Бот успешно запущен!")
-    except Exception as e:
-        logger.error(f"❌ Ошибка при запуске бота: {e}")
+        logger.info("🤖 Запуск NFT бота для TON...")
+        logger.info(f"👑 Администраторы: {ADMIN_IDS}")
+        logger.info(f"💎 Сеть TON: {ton_manager.network}")
+        logger.info(f"💰 Диапазон цен: {MIN_NFT_PRICE}-{MAX_NFT_PRICE} TON")
+
+        # Инициализация TON провайдера
+        asyncio.run(ton_manager.init_provider())
+
+        # Бесконечный цикл с перезапуском при ошибках для Render
+        while True:
+            try:
+                logger.info("🔄 Запуск polling бота...")
+                bot.infinity_polling(
+                    skip_pending=True,  # Пропустить pending updates
+                    timeout=30,
+                    long_polling_timeout=30
+                )
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"❌ Ошибка при работе бота: {error_msg}")
+
+                # Если ошибка 409 (конфликт экземпляров), ждем дольше
+                if "409" in error_msg:
+                    logger.info("🕒 Обнаружен конфликт экземпляров, ждем 60 секунд...")
+                    time.sleep(60)
+                else:
+                    logger.info("🔄 Перезапуск через 15 секунд...")
+                    time.sleep(15)

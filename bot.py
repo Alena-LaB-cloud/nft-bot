@@ -29,7 +29,16 @@ try:
 except ImportError as e:
     print(f"⚠️ Database модуль недоступен: {e}")
     DB_AVAILABLE = False
+    
+# Добавьте после импортов:
+print("🔧 Debug: Starting bot initialization...")
+print(f"🔧 Debug: TON_AVAILABLE = {TON_AVAILABLE}")
+print(f"🔧 Debug: DB_AVAILABLE = {DB_AVAILABLE}")
 
+if DB_AVAILABLE:
+    print("✅ Database module imported successfully")
+else:
+    print("❌ Database module failed to import")
 # Инициализация бота (ПОСЛЕ импортов config)
 bot = TeleBot(BOT_TOKEN)
 
@@ -281,3 +290,4 @@ if __name__ == "__main__":
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+

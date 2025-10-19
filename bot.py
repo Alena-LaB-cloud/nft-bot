@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 # Инициализация бота
 # Инициализация бота (ПОСЛЕ импортов config)
-bot = TeleBot(8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc)
+bot = TeleBot("8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc")
 
 # Команды бота (остаются без изменений)
 @bot.message_handler(commands=['start'])
@@ -169,6 +169,7 @@ except ImportError as e:
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 
 
 

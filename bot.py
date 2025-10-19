@@ -41,8 +41,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Инициализация бота
-BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
-bot = TeleBot(BOT_TOKEN)
+# Инициализация бота (ПОСЛЕ импортов config)
+bot = TeleBot(8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc)
 
 # Команды бота (остаются без изменений)
 @bot.message_handler(commands=['start'])
@@ -169,5 +169,6 @@ except ImportError as e:
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 
 

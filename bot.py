@@ -7,16 +7,19 @@ import threading
 from telebot import TeleBot, types
 from flask import Flask
 
+print("🟢 DEBUG: Starting imports...")
+
 # Безопасный импорт модулей
 try:
     import ton_manager
+    print("✅ DEBUG: ton_manager imported")
     from config import BOT_TOKEN, ADMIN_IDS, MIN_NFT_PRICE, MAX_NFT_PRICE, TON_NETWORK
+    print("✅ DEBUG: config imported")
     TON_AVAILABLE = True
 except ImportError as e:
-    print(f"⚠️ Config модули недоступны: {e}")
-    # Значения по умолчанию
+    print(f"❌ DEBUG: Config modules failed: {e}")
     BOT_TOKEN = os.getenv('BOT_TOKEN', '8429039115:AAFLkJFjhgbpMyva7Kf5fHydDOVIPWdRCdc')
-    ADMIN_IDS = [788630583]  # ваш ID из config.py
+    ADMIN_IDS = [788630583]
     MIN_NFT_PRICE = 0.1
     MAX_NFT_PRICE = 10.0
     TON_NETWORK = 'testnet'
@@ -24,21 +27,23 @@ except ImportError as e:
 
 try:
     from database import DatabaseManager
+    print("✅ DEBUG: DatabaseManager imported")
     db = DatabaseManager()
+    print("✅ DEBUG: Database initialized")
     DB_AVAILABLE = True
 except ImportError as e:
-    print(f"⚠️ Database модуль недоступен: {e}")
+    print(f"❌ DEBUG: Database import failed: {e}")
     DB_AVAILABLE = False
-    
-# Добавьте после импортов:
-print("🔧 Debug: Starting bot initialization...")
-print(f"🔧 Debug: TON_AVAILABLE = {TON_AVAILABLE}")
-print(f"🔧 Debug: DB_AVAILABLE = {DB_AVAILABLE}")
+except Exception as e:
+    print(f"❌ DEBUG: Database initialization failed: {e}")
+    DB_AVAILABLE = False
 
-if DB_AVAILABLE:
-    print("✅ Database module imported successfully")
-else:
-    print("❌ Database module failed to import")
+print(f"🔧 DEBUG: TON_AVAILABLE = {TON_AVAILABLE}")
+print(f"🔧 DEBUG: DB_AVAILABLE = {DB_AVAILABLE}")
+
+# Инициализация бота
+bot = TeleBot(BOT_TOKEN)
+print("✅ DEBUG: Bot initialized")
 # Инициализация бота (ПОСЛЕ импортов config)
 bot = TeleBot(BOT_TOKEN)
 
@@ -290,4 +295,5 @@ if __name__ == "__main__":
             else:
                 logger.info("🔄 Перезапуск через 15 секунд...")
                 time.sleep(15)
+
 

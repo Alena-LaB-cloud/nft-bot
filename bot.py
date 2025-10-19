@@ -9,6 +9,13 @@ from datetime import datetime
 from telebot import TeleBot, types
 from flask import Flask
 
+try:
+    from transaction_simulator import tx_simulator
+    TX_SIMULATOR_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Transaction simulator unavailable: {e}")
+    TX_SIMULATOR_AVAILABLE = False
+    
 # Безопасный импорт модулей
 try:
     import ton_manager
@@ -641,6 +648,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

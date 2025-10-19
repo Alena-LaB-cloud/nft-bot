@@ -184,6 +184,28 @@ def nft_command(message):
     waiting_for_nft[message.chat.id] = True
     bot.send_message(message.chat.id, nft_text)
 
+# В функциях handle_media и handle_nft_text после создания NFT добавьте:
+if TX_SIMULATOR_AVAILABLE:
+    transaction = tx_simulator.simulate_mint(
+        nft_id=nft_id,
+        user_id=user_id
+    )
+    
+    success_text = f"""
+🎉 NFT успешно создан!
+
+🖼️ Название: {nft_name}
+🆔 ID: {nft_id}
+📅 Создан: {new_nft['created_at']}
+🔗 Транзакция: {transaction['tx_hash']}
+👤 Владелец: Вы
+
+Теперь вы можете:
+• 💰 Продать этот NFT
+• 🎁 Подарить его другу
+• 🖼️ Посмотреть в своей коллекции
+"""
+
 @bot.message_handler(commands=['my_nfts'])
 def my_nfts_command(message):
     """Мои NFT"""
@@ -687,6 +709,7 @@ if __name__ == "__main__":
             logger.error(f"❌ Ошибка при работе бота: {error_msg}")
             logger.info("🔄 Перезапуск через 15 секунд...")
             time.sleep(15)
+
 
 
 

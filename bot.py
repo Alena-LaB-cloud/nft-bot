@@ -607,8 +607,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"❌ Ошибка при работе бота: {e}")
         asyncio.run(ton_manager.close_provider())
-
-        except Exception as e:
-            print(f"❌ Ошибка: {e}")
-            time.sleep(10)
-

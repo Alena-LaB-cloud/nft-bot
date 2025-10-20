@@ -1,1 +1,7 @@
-pyTelegramBotAPI==4.19.1
+telebot~=0.0.5
+pyTelegramBotAPI~=4.29.1
+dotenv~=0.9.9
+python-dotenv~=1.1.1
+pillow~=11.3.0
+requests~=2.32.5
+pytoniq~=0.1.41

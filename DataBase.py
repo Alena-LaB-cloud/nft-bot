@@ -92,11 +92,11 @@ def get_wallet_address(user_id: int) -> Optional[str]:
 
 def user_has_wallet(user_id: int) -> bool:
     """Проверяет, есть ли у пользователя кошелек"""
-    return get_wallet_address(user_id) is not None
     try:
-        except Exception as e:
-            logger.error(f"❌ Ошибка получения кошелька: {e}")
-            return None
+        return get_wallet_address(user_id) is not None
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения кошелька: {e}")
+        return False
 
 # Глобальный экземпляр базы данных
 db = DatabaseManager()

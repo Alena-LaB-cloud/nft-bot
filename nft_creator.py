@@ -192,3 +192,8 @@ class NFTCreator:
 
         except Exception as e:
             logger.error(f"Error updating user stats: {e}")
+            with open(stats_file, 'w') as f:
+                json.dump(stats, f, indent=2)
+
+        except Exception as e:
+            logger.error(f"Error updating user stats: {e}")

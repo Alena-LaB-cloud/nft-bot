@@ -18,4 +18,4 @@ MIN_NFT_PRICE = float(os.getenv('MIN_NFT_PRICE', '0.1'))
 MAX_NFT_PRICE = float(os.getenv('MAX_NFT_PRICE', '1000.0'))
 
 # Настройки безопасности
-REQUIRE_TON_PROOF = os.getenv('REQUIRE_TON_PROOF', 'true').lower() == 'true
+REQUIRE_TON_PROOF = os.getenv('REQUIRE_TON_PROOF', 'true').lower() == 'true'

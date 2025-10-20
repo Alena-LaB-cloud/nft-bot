@@ -6,3 +6,4 @@ pillow~=11.3.0
 requests~=2.32.5
 pytoniq~=0.1.41
 qrcode[pil]
+pytonconnect

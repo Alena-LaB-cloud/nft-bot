@@ -89,8 +89,6 @@ def get_wallet_address(user_id: int) -> Optional[str]:
         logger.error(f"❌ Error getting wallet: {e}")
         return None
 
-db = DatabaseManager()
-
 def user_has_wallet(user_id: int) -> bool:
     """Проверяет, есть ли у пользователя кошелек"""
     try:
